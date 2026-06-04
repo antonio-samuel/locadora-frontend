@@ -1,0 +1,245 @@
+<!-- ══════════════════════ NAVBAR ══════════════════════ -->
+<nav class="navbar navbar-dark bg-dark px-4">
+  <span class="navbar-brand fw-bold text-white">
+    🚗 LocaDrive
+  </span>
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-white small">
+      Olá, <strong>{{ usuarioLogado?.nome }}</strong>
+    </span>
+    <button class="btn btn-outline-light btn-sm" (click)="logout()">Sair</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════ CARDS DE MÉTRICAS ══════════════════════ -->
+<div class="container-fluid px-4 mt-4">
+  <div class="row g-3 mb-4">
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm text-white bg-primary">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="small opacity-75">Total de Locações</div>
+            <div class="fs-3 fw-bold">{{ locacoes.length }}</div>
+          </div>
+          <span class="fs-1 opacity-50">📋</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm text-white bg-success">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="small opacity-75">Ativas</div>
+            <div class="fs-3 fw-bold">{{ totalAtivas }}</div>
+          </div>
+          <span class="fs-1 opacity-50">🔑</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm text-white bg-secondary">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="small opacity-75">Concluídas</div>
+            <div class="fs-3 fw-bold">{{ totalConcluidas }}</div>
+          </div>
+          <span class="fs-1 opacity-50">✅</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CARD DE SIMULAÇÃO -->
+  <div class="row mb-4" *ngIf="simulacao.visivel">
+    <div class="col-12">
+      <div class="card border-warning border-2 shadow-sm">
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+          <span>⚠️ Resultado da Simulação — {{ simulacaoLocacao?.veiculo?.marca }} {{ simulacaoLocacao?.veiculo?.modelo }}</span>
+          <button class="btn btn-sm btn-outline-dark" (click)="fecharSimulacao()">✕ Fechar</button>
+        </div>
+        <div class="card-body">
+          <div class="row text-center g-3">
+            <div class="col-md-3">
+              <div class="small text-muted">Data de Devolução Simulada</div>
+              <div class="fw-bold fs-5">{{ formatarData(simulacao.data) }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">Valor Base</div>
+              <div class="fw-bold fs-5">{{ formatarValor(simulacao.valor) }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">Multa (20%)</div>
+              <div class="fw-bold fs-5" [class.text-danger]="simulacao.multa > 0">
+                {{ simulacao.multa > 0 ? formatarValor(simulacao.multa) : '—' }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted">Total Estimado</div>
+              <div class="fw-bold fs-5 text-primary">{{ formatarValor(simulacao.total) }}</div>
+            </div>
+          </div>
+          <div class="mt-3 text-center">
+            <span *ngIf="simulacao.multa > 0" class="badge bg-danger fs-6">
+              ⚠️ Devolução com atraso — multa aplicada
+            </span>
+            <span *ngIf="simulacao.multa === 0" class="badge bg-success fs-6">
+              ✅ Devolução dentro do prazo — sem multa
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ CONTEÚDO PRINCIPAL ══════════════════════ -->
+  <div class="row g-4">
+
+    <!-- COLUNA ESQUERDA: Formulário de Nova Locação -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-dark text-white fw-bold">
+          Nova Locação
+        </div>
+        <div class="card-body">
+          <form [formGroup]="form" (ngSubmit)="abrirLocacao()" novalidate>
+
+            <div class="mb-3">
+              <label class="form-label">Veículo</label>
+              <select class="form-select" formControlName="veiculoId"
+                [class.is-invalid]="form.get('veiculoId')!.invalid && form.get('veiculoId')!.touched">
+                <option value="" disabled selected>Selecione um veículo</option>
+                <option *ngFor="let v of veiculosDisponiveis" [value]="v.id">
+                  {{ v.marca }} {{ v.modelo }} — {{ v.placa }} —
+                  {{ v.valorDiaria | currency:'BRL' }}/dia
+                </option>
+              </select>
+              <div class="text-danger small mt-1"
+                *ngIf="form.get('veiculoId')!.invalid && form.get('veiculoId')!.touched">
+                Selecione um veículo.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Data de Retirada</label>
+              <input type="date" class="form-control" formControlName="dataEmprestimo"
+                [class.is-invalid]="form.get('dataEmprestimo')!.invalid && form.get('dataEmprestimo')!.touched"
+                [class.is-valid]="form.get('dataEmprestimo')!.valid && form.get('dataEmprestimo')!.touched"/>
+              <div class="text-danger small mt-1"
+                *ngIf="form.get('dataEmprestimo')!.invalid && form.get('dataEmprestimo')!.touched">
+                A data de retirada é obrigatória.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Data de Devolução Prevista</label>
+              <input type="date" class="form-control" formControlName="dataDevolucaoPrevista"
+                [class.is-invalid]="form.get('dataDevolucaoPrevista')!.invalid && form.get('dataDevolucaoPrevista')!.touched"
+                [class.is-valid]="form.get('dataDevolucaoPrevista')!.valid && form.get('dataDevolucaoPrevista')!.touched"/>
+              <div class="text-danger small mt-1"
+                *ngIf="form.get('dataDevolucaoPrevista')!.invalid && form.get('dataDevolucaoPrevista')!.touched">
+                A data de devolução é obrigatória.
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100" [disabled]="carregando">
+              <span *ngIf="carregando"
+                class="spinner-border spinner-border-sm me-2" role="status"></span>
+              {{ carregando ? 'Abrindo...' : 'Abrir Locação' }}
+            </button>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA DIREITA: Tabela de Locações -->
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span class="fw-bold">Histórico de Locações</span>
+          <select class="form-select form-select-sm w-auto"
+            [(ngModel)]="filtroStatus" [ngModelOptions]="{standalone: true}">
+            <option value="TODAS">Todas</option>
+            <option value="ATIVA">Ativas</option>
+            <option value="CONCLUIDA_NO_PRAZO">Concluídas no Prazo</option>
+            <option value="CONCLUIDA_COM_ATRASO">Concluídas com Atraso</option>
+          </select>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Veículo</th>
+                  <th>Cliente</th>
+                  <th>Retirada</th>
+                  <th>Devolução Prevista</th>
+                  <th>Devolução Real</th>
+                  <th>Valor Total</th>
+                  <th>Multa</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let loc of locacoesFiltradas">
+                  <td class="text-muted small">{{ loc.id }}</td>
+                  <td>
+                    <strong>{{ loc.veiculo.marca }} {{ loc.veiculo.modelo }}</strong>
+                    <br>
+                    <span class="text-muted small">{{ loc.veiculo.placa }}</span>
+                  </td>
+                  <td>
+                    <span>{{ loc.usuario.nome }}</span>
+                  </td>
+                  <td class="small">{{ formatarData(loc.dataEmprestimo) }}</td>
+                  <td class="small">{{ formatarData(loc.dataDevolucaoPrevista) }}</td>
+                  <td class="small">{{ formatarData(loc.dataDevolucaoReal!) }}</td>
+                  <td class="small fw-bold">{{ formatarValor(loc.valorTotal) }}</td>
+                  <td class="small text-danger">
+                    {{ loc.valorMulta ? formatarValor(loc.valorMulta) : '—' }}
+                  </td>
+                  <td>
+                    <span [class]="badgeStatus(loc.status)">
+                      {{ labelStatus(loc.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1 flex-wrap">
+                      <button *ngIf="loc.status === 'ATIVA'"
+                        class="btn btn-sm btn-success"
+                        (click)="finalizar(loc.id!)">
+                        Devolver
+                      </button>
+                      <button *ngIf="loc.status === 'ATIVA'"
+                        class="btn btn-sm btn-warning"
+                        (click)="simularDevolucao(loc)">
+                        Simular Devolução
+                      </button>
+                      <button *ngIf="loc.status === 'ATIVA'"
+                        class="btn btn-sm btn-danger"
+                        (click)="cancelar(loc.id!)">
+                           Cancelar
+                        </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="locacoesFiltradas.length === 0">
+                  <td colspan="10" class="text-center text-muted py-4">
+                    Nenhuma locação encontrada.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

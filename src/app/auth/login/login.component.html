@@ -1,0 +1,43 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+  <div class="mb-3">
+    <label class="form-label" for="loginEmail">E-mail</label>
+    <input
+      id="loginEmail"
+      type="email"
+      class="form-control"
+      formControlName="email"
+      [class.is-invalid]="email.invalid && email.touched"
+      [class.is-valid]="email.valid && email.touched"
+      placeholder="seu@email.com"
+    />
+    <div class="text-danger small mt-1" *ngIf="email.invalid && email.touched">
+      <span *ngIf="email.errors?.['required']">O e-mail é obrigatório.</span>
+      <span *ngIf="email.errors?.['email']">E-mail inválido: verifique o formato.</span>
+      <span *ngIf="email.errors?.['credenciaisInvalidas']">E-mail ou senha incorretos.</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="loginSenha">Senha</label>
+    <input
+      id="loginSenha"
+      type="password"
+      class="form-control"
+      formControlName="senha"
+      [class.is-invalid]="senha.invalid && senha.touched"
+      [class.is-valid]="senha.valid && senha.touched"
+      placeholder="******"
+    />
+    <div class="text-danger small mt-1" *ngIf="senha.invalid && senha.touched">
+      <span *ngIf="senha.errors?.['required']">A senha é obrigatória.</span>
+      <span *ngIf="senha.errors?.['credenciaisInvalidas']">E-mail ou senha incorretos.</span>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary w-100 mt-2" [disabled]="carregando">
+    <span *ngIf="carregando" class="spinner-border spinner-border-sm me-2" role="status"></span>
+    {{ carregando ? 'Entrando...' : 'Entrar' }}
+  </button>
+
+</form>

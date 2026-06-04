@@ -1,0 +1,90 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadNome">Nome Completo</label>
+    <input id="cadNome" type="text" class="form-control" formControlName="nome"
+      [class.is-invalid]="nome.invalid && nome.touched"
+      [class.is-valid]="nome.valid && nome.touched"
+      maxlength="80" placeholder="Ana Maria Santos"/>
+    <div class="text-danger small mt-1" *ngIf="nome.invalid && nome.touched">
+      <span *ngIf="nome.errors?.['required']">O nome completo é obrigatório.</span>
+      <span *ngIf="nome.errors?.['minlength']">Nome muito curto (mínimo 3 caracteres).</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadCpf">CPF (apenas números)</label>
+    <input id="cadCpf" type="text" class="form-control" formControlName="cpf"
+      [class.is-invalid]="cpf.invalid && cpf.touched"
+      [class.is-valid]="cpf.valid && cpf.touched"
+      maxlength="11" inputmode="numeric" placeholder="12345678911"/>
+    <div class="text-danger small mt-1" *ngIf="cpf.invalid && cpf.touched">
+      <span *ngIf="cpf.errors?.['required']">O CPF é obrigatório.</span>
+      <span *ngIf="cpf.errors?.['cpfInvalido']">
+        CPF incompleto: você digitou {{ digitosCpf }} de 11 dígitos.
+      </span>
+      <span *ngIf="cpf.errors?.['duplicado']">{{ cpf.errors?.['duplicado'].duplicado }}</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadCnh">CNH (apenas números)</label>
+    <input id="cadCnh" type="text" class="form-control" formControlName="cnh"
+      [class.is-invalid]="cnh.invalid && cnh.touched"
+      [class.is-valid]="cnh.valid && cnh.touched"
+      maxlength="11" inputmode="numeric" placeholder="11223344544"/>
+    <div class="text-danger small mt-1" *ngIf="cnh.invalid && cnh.touched">
+      <span *ngIf="cnh.errors?.['required']">A CNH é obrigatória.</span>
+      <span *ngIf="cnh.errors?.['cnhInvalida']">
+        CNH inválida: você digitou {{ digitosCnh }} dígito(s). Necessário entre 10 e 11.
+      </span>
+      <span *ngIf="cnh.errors?.['duplicado']">{{ cnh.errors?.['duplicado'].duplicado }}</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadTelefone">Telefone (com DDD)</label>
+    <input id="cadTelefone" type="text" class="form-control" formControlName="telefone"
+      [class.is-invalid]="telefone.invalid && telefone.touched"
+      [class.is-valid]="telefone.valid && telefone.touched"
+      maxlength="11" inputmode="numeric" placeholder="11987654321"/>
+    <div class="text-danger small mt-1" *ngIf="telefone.invalid && telefone.touched">
+      <span *ngIf="telefone.errors?.['required']">O telefone é obrigatório.</span>
+      <span *ngIf="telefone.errors?.['telefoneInvalido']">
+        Telefone inválido: você digitou {{ digitosTelefone }} dígito(s). Necessário entre 10 e 11.
+      </span>
+      <span *ngIf="telefone.errors?.['duplicado']">{{ telefone.errors?.['duplicado'] }}</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadEmail">E-mail</label>
+    <input id="cadEmail" type="email" class="form-control" formControlName="email"
+      [class.is-invalid]="email.invalid && email.touched"
+      [class.is-valid]="email.valid && email.touched"
+      maxlength="50" placeholder="ana.santos@provedor.com"/>
+    <div class="text-danger small mt-1" *ngIf="email.invalid && email.touched">
+      <span *ngIf="email.errors?.['required']">O e-mail é obrigatório.</span>
+      <span *ngIf="email.errors?.['email']">E-mail inválido: verifique o formato.</span>
+      <span *ngIf="email.errors?.['duplicado']">{{ email.errors?.['duplicado'] }}</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="cadSenha">Senha</label>
+    <input id="cadSenha" type="password" class="form-control" formControlName="senha"
+      [class.is-invalid]="senha.invalid && senha.touched"
+      [class.is-valid]="senha.valid && senha.touched"
+      maxlength="20" placeholder="Crie uma senha"/>
+    <div class="text-danger small mt-1" *ngIf="senha.invalid && senha.touched">
+      <span *ngIf="senha.errors?.['required']">A senha é obrigatória.</span>
+      <span *ngIf="senha.errors?.['minlength']">Senha muito curta (mínimo 4 caracteres).</span>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-success w-100 mt-2" [disabled]="carregando">
+    <span *ngIf="carregando" class="spinner-border spinner-border-sm me-2" role="status"></span>
+    {{ carregando ? 'Cadastrando...' : 'Cadastrar Conta' }}
+  </button>
+
+</form>
