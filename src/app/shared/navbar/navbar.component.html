@@ -1,0 +1,46 @@
+<nav class="navbar navbar-dark bg-dark px-4">
+
+  <a class="navbar-brand fw-bold text-white text-decoration-none" routerLink="/catalogo">
+    🚗 LocaDrive
+  </a>
+
+  <div class="d-flex align-items-center gap-2">
+
+    <a routerLink="/catalogo"
+       routerLinkActive="active"
+       class="btn btn-outline-light btn-sm">
+      Catálogo
+    </a>
+
+    <ng-container *ngIf="authService.isLogado(); else botoesDeslogado">
+
+      <a routerLink="/dashboard"
+         routerLinkActive="active"
+         class="btn btn-outline-light btn-sm">
+        Minha Área
+      </a>
+
+      <a routerLink="/perfil"
+         routerLinkActive="active"
+         class="btn btn-outline-light btn-sm">
+        Perfil
+      </a>
+
+      <span class="text-white small ms-2">
+        Olá, <strong>{{ authService.getSessao()?.nome }}</strong>
+      </span>
+
+      <button class="btn btn-outline-danger btn-sm" (click)="logout()">
+        Sair
+      </button>
+
+    </ng-container>
+
+    <ng-template #botoesDeslogado>
+      <a routerLink="/auth/login" class="btn btn-primary btn-sm">Login</a>
+      <a routerLink="/auth/cadastro" class="btn btn-outline-light btn-sm">Cadastrar</a>
+    </ng-template>
+
+  </div>
+
+</nav>

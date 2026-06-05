@@ -8,8 +8,7 @@ import { VeiculoService } from '../core/services/veiculo.services';
 import { LocacaoDetalhe } from '../core/models/locacao.model';
 import { Veiculo } from '../core/models/veiculo.model';
 import { Usuario } from '../core/models/usuario.model';
-import {ActivatedRoute ,Router } from '@angular/router';
-
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,9 +21,15 @@ export class DashboardComponent implements OnInit {
   veiculos: Veiculo[] = [];
   carregando = false;
   form: FormGroup;
-
-  // Filtro de status
   filtroStatus: string = 'TODAS';
+
+  // Simulação
+  simulacao: { visivel: boolean; valor: number; multa: number; total: number; data: string } = {
+    visivel: false, valor: 0, multa: 0, total: 0, data: ''
+  };
+  simulacaoLocacao: LocacaoDetalhe | null = null;
+  modalSimulacaoVisivel = false;
+  dataSimulacaoModal = '';
 
   constructor(
     private fb: FormBuilder,
@@ -35,44 +40,45 @@ export class DashboardComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
-      veiculoId:            ['', Validators.required],
-      dataEmprestimo:       ['', Validators.required],
+      veiculoId:             ['', Validators.required],
+      dataEmprestimo:        ['', Validators.required],
       dataDevolucaoPrevista: ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
-  this.usuarioLogado = this.authService.getSessao();
-  if (!this.usuarioLogado) {
-    this.router.navigate(['/auth/login']);
-    return;
-  }
-  this.carregarDados().then(() => {
-    const veiculoId = this.route.snapshot.queryParamMap.get('veiculoId');
-    if (veiculoId) {
-      this.form.patchValue({ veiculoId });
+    this.usuarioLogado = this.authService.getSessao();
+    if (!this.usuarioLogado) {
+      this.router.navigate(['/auth/login']);
+      return;
     }
-  });
-}
- async carregarDados(): Promise<void> {
-  try {
-    const isAdmin = this.usuarioLogado?.perfil === 'ADMIN';
-
-    const [locacoes, veiculos] = await Promise.all([
-      isAdmin
-        ? firstValueFrom(this.locacaoService.listar())
-        : firstValueFrom(this.locacaoService.listarPorUsuario(this.usuarioLogado!.id!)),
-      firstValueFrom(this.veiculoService.listarDisponiveis())
-    ]);
-
-    this.locacoes = locacoes;
-    this.veiculos = veiculos;
-  } catch {
-    alert('❌ Erro ao carregar dados. Verifique se o backend está ativo.');
+    this.carregarDados().then(() => {
+      const veiculoId = this.route.snapshot.queryParamMap.get('veiculoId');
+      if (veiculoId) {
+        this.form.patchValue({ veiculoId });
+      }
+    });
   }
-}
 
- get locacoesFiltradas(): LocacaoDetalhe[] {
+  async carregarDados(): Promise<void> {
+    try {
+      const isAdmin = this.usuarioLogado?.perfil === 'ADMIN';
+      const [locacoes, veiculos] = await Promise.all([
+        isAdmin
+          ? firstValueFrom(this.locacaoService.listar())
+          : firstValueFrom(this.locacaoService.listarPorUsuario(this.usuarioLogado!.id!)),
+        firstValueFrom(this.veiculoService.listarDisponiveis())
+      ]);
+      this.locacoes = locacoes;
+      this.veiculos = veiculos;
+    } catch {
+      alert('❌ Erro ao carregar dados. Verifique se o backend está ativo.');
+    }
+  }
+
+  // ── Getters ──────────────────────────────────────────────────────────────
+
+  get locacoesFiltradas(): LocacaoDetalhe[] {
     if (this.filtroStatus === 'TODAS') return this.locacoes;
     return this.locacoes.filter(l => l.status === this.filtroStatus);
   }
@@ -90,6 +96,9 @@ export class DashboardComponent implements OnInit {
   get veiculosDisponiveis(): Veiculo[] {
     return this.veiculos.filter(v => v.disponivel);
   }
+
+  // ── Ações de Locação ──────────────────────────────────────────────────────
+
   async abrirLocacao(): Promise<void> {
     this.form.markAllAsTouched();
     if (this.form.invalid || !this.usuarioLogado) return;
@@ -131,126 +140,100 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  async simularAtraso(locacao: LocacaoDetalhe): Promise<void> {
-  const dataPrevista = new Date(locacao.dataDevolucaoPrevista)
-    .toISOString().slice(0, 10);
-
-  const dataEscolhida = prompt(
-    `Digite a data de devolução real (formato AAAA-MM-DD):\n` +
-    `Data prevista: ${this.formatarData(locacao.dataDevolucaoPrevista)}\n` +
-    `(Para gerar multa, escolha uma data posterior à prevista)`
-  );
-
-  if (!dataEscolhida) return;
-
-  // Valida o formato básico da data
-  const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dataRegex.test(dataEscolhida)) {
-    alert('❌ Formato inválido. Use o formato AAAA-MM-DD.\nExemplo: 2026-06-20');
-    return;
+  async cancelar(id: number): Promise<void> {
+    if (!confirm('Tem certeza que deseja cancelar esta locação?\nEsta ação não pode ser desfeita.')) return;
+    try {
+      await firstValueFrom(this.locacaoService.cancelar(id));
+      await this.carregarDados();
+    } catch {
+      alert('❌ Erro ao cancelar locação.');
+    }
   }
 
-  const dataISO = `${dataEscolhida}T10:00:00`;
-  const dataFormatada = new Date(dataEscolhida).toLocaleDateString('pt-BR');
-  const comAtraso = new Date(dataEscolhida) > new Date(dataPrevista);
+  // ── Simulação de Devolução ────────────────────────────────────────────────
 
-  if (!confirm(
-    `Confirmar devolução em ${dataFormatada}?\n` +
-    `${comAtraso ? '⚠️ Esta data gera multa de 20%.' : '✅ Dentro do prazo, sem multa.'}`
-  )) return;
-
-  try {
-    await firstValueFrom(this.locacaoService.simularAtraso(locacao.id!, dataISO));
-    await this.carregarDados();
-  } catch {
-    alert('❌ Erro ao registrar devolução.');
-  }
-}
-// Resultado da simulação
-simulacao: { visivel: boolean; valor: number; multa: number; total: number; data: string } = {
-  visivel: false, valor: 0, multa: 0, total: 0, data: ''
-};
-simulacaoLocacao: LocacaoDetalhe | null = null;
-
-simularDevolucao(locacao: LocacaoDetalhe): void {
-  const dataEscolhida = prompt(
-    `Simulação de Devolução\n` +
-    `Data prevista: ${this.formatarData(locacao.dataDevolucaoPrevista)}\n\n` +
-    `Digite a data de devolução (formato AAAA-MM-DD):`
-  );
-
-  if (!dataEscolhida) return;
-
-  const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dataRegex.test(dataEscolhida)) {
-    alert('❌ Formato inválido. Use AAAA-MM-DD.\nExemplo: 2026-06-20');
-    return;
+  simularDevolucao(locacao: LocacaoDetalhe): void {
+    this.simulacaoLocacao = locacao;
+    this.simulacao = { visivel: false, valor: 0, multa: 0, total: 0, data: '' };
+    this.modalSimulacaoVisivel = true;
   }
 
-  const dataPrevista = new Date(locacao.dataDevolucaoPrevista);
-  const dataReal     = new Date(dataEscolhida);
-  const comAtraso    = dataReal > dataPrevista;
+  confirmarSimulacao(): void {
+  if (!this.dataSimulacaoModal || !this.simulacaoLocacao) return;
 
-  const valorBase = locacao.valorTotal;
-  const multa     = comAtraso ? valorBase * 0.20 : 0;
-  const total     = valorBase + multa;
+  const dataPrevista  = new Date(this.simulacaoLocacao.dataDevolucaoPrevista);
+  const dataReal = new Date(this.dataSimulacaoModal + 'T12:00:00');
+  const comAtraso     = dataReal > dataPrevista;
 
-  this.simulacaoLocacao = locacao;
+  const valorBase   = Number(this.simulacaoLocacao.valorTotal);
+  const valorDiaria = Number(this.simulacaoLocacao.veiculo.valorDiaria);
+
+  let multa = 0;
+  if (comAtraso) {
+    const diasAtraso = Math.ceil(
+      (dataReal.getTime() - dataPrevista.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    multa = diasAtraso * valorDiaria * 0.02;//2% ao dia
+  }
+
+  const total = valorBase + multa;
+
   this.simulacao = {
     visivel: true,
     valor:   valorBase,
     multa,
     total,
-    data:    dataEscolhida
+    data:    this.dataSimulacaoModal
   };
+
+  this.modalSimulacaoVisivel = false;
+  this.dataSimulacaoModal = '';
 }
 
-fecharSimulacao(): void {
-  this.simulacao = { visivel: false, valor: 0, multa: 0, total: 0, data: '' };
-  this.simulacaoLocacao = null;
-}
-
-  formatarData(data: string): string {
-    if (!data) return '—';
-    return new Date(data).toLocaleDateString('pt-BR');
+  fecharModalSimulacao(): void {
+    this.modalSimulacaoVisivel = false;
+    this.dataSimulacaoModal = '';
   }
 
+  fecharSimulacao(): void {
+    this.simulacao = { visivel: false, valor: 0, multa: 0, total: 0, data: '' };
+    this.simulacaoLocacao = null;
+  }
+
+  // ── Utilitários ───────────────────────────────────────────────────────────
+
+ formatarData(data: string): string {
+  if (!data) return '—';
+  // Adiciona T12:00:00 se for uma data simples (AAAA-MM-DD)
+  const dataAjustada = data.length === 10 ? `${data}T12:00:00` : data;
+  return new Date(dataAjustada).toLocaleDateString('pt-BR');
+}
   formatarValor(valor: number): string {
     return valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? '—';
   }
 
- badgeStatus(status: string): string {
-  switch (status) {
-    case 'ATIVA':                return 'badge bg-primary';
-    case 'CONCLUIDA_NO_PRAZO':   return 'badge bg-success';
-    case 'CONCLUIDA_COM_ATRASO': return 'badge bg-danger';
-    case 'CANCELADA':            return 'badge bg-warning text-dark';
-    default:                     return 'badge bg-secondary';
+  badgeStatus(status: string): string {
+    switch (status) {
+      case 'ATIVA':                return 'badge bg-primary';
+      case 'CONCLUIDA_NO_PRAZO':   return 'badge bg-success';
+      case 'CONCLUIDA_COM_ATRASO': return 'badge bg-danger';
+      case 'CANCELADA':            return 'badge bg-warning text-dark';
+      default:                     return 'badge bg-secondary';
+    }
   }
-}
 
-labelStatus(status: string): string {
-  switch (status) {
-    case 'ATIVA':                return 'Ativa';
-    case 'CONCLUIDA_NO_PRAZO':   return 'Concluída no Prazo';
-    case 'CONCLUIDA_COM_ATRASO': return 'Concluída com Atraso';
-    case 'CANCELADA':            return 'Cancelada';
-    default:                     return status;
+  labelStatus(status: string): string {
+    switch (status) {
+      case 'ATIVA':                return 'Ativa';
+      case 'CONCLUIDA_NO_PRAZO':   return 'Concluída no Prazo';
+      case 'CONCLUIDA_COM_ATRASO': return 'Concluída com Atraso';
+      case 'CANCELADA':            return 'Cancelada';
+      default:                     return status;
+    }
   }
-}
-
-  async cancelar(id: number): Promise<void> {
-  if (!confirm('Tem certeza que deseja cancelar esta locação?\nEsta ação não pode ser desfeita.')) return;
-  try {
-    await firstValueFrom(this.locacaoService.cancelar(id));
-    await this.carregarDados();
-  } catch {
-    alert('❌ Erro ao cancelar locação.');
-  }
-}
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/catalogo']);
   }
 }

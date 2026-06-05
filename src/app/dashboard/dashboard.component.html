@@ -1,20 +1,9 @@
-<!-- ══════════════════════ NAVBAR ══════════════════════ -->
-<nav class="navbar navbar-dark bg-dark px-4">
-  <span class="navbar-brand fw-bold text-white">
-    🚗 LocaDrive
-  </span>
-  <div class="d-flex align-items-center gap-3">
-    <span class="text-white small">
-      Olá, <strong>{{ usuarioLogado?.nome }}</strong>
-    </span>
-    <button class="btn btn-outline-light btn-sm" (click)="logout()">Sair</button>
-  </div>
-</nav>
+<app-navbar></app-navbar>
 
-<!-- ══════════════════════ CARDS DE MÉTRICAS ══════════════════════ -->
 <div class="container-fluid px-4 mt-4">
-  <div class="row g-3 mb-4">
 
+  <!-- CARDS DE MÉTRICAS -->
+  <div class="row g-3 mb-4">
     <div class="col-md-4">
       <div class="card border-0 shadow-sm text-white bg-primary">
         <div class="card-body d-flex justify-content-between align-items-center">
@@ -26,7 +15,6 @@
         </div>
       </div>
     </div>
-
     <div class="col-md-4">
       <div class="card border-0 shadow-sm text-white bg-success">
         <div class="card-body d-flex justify-content-between align-items-center">
@@ -38,7 +26,6 @@
         </div>
       </div>
     </div>
-
     <div class="col-md-4">
       <div class="card border-0 shadow-sm text-white bg-secondary">
         <div class="card-body d-flex justify-content-between align-items-center">
@@ -50,7 +37,6 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <!-- CARD DE SIMULAÇÃO -->
@@ -72,7 +58,7 @@
               <div class="fw-bold fs-5">{{ formatarValor(simulacao.valor) }}</div>
             </div>
             <div class="col-md-3">
-              <div class="small text-muted">Multa (20%)</div>
+              <div class="small text-muted">Multa (2% ao dia)</div>
               <div class="fw-bold fs-5" [class.text-danger]="simulacao.multa > 0">
                 {{ simulacao.multa > 0 ? formatarValor(simulacao.multa) : '—' }}
               </div>
@@ -95,7 +81,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════ CONTEÚDO PRINCIPAL ══════════════════════ -->
+  <!-- CONTEÚDO PRINCIPAL -->
   <div class="row g-4">
 
     <!-- COLUNA ESQUERDA: Formulário de Nova Locação -->
@@ -167,6 +153,7 @@
             <option value="ATIVA">Ativas</option>
             <option value="CONCLUIDA_NO_PRAZO">Concluídas no Prazo</option>
             <option value="CONCLUIDA_COM_ATRASO">Concluídas com Atraso</option>
+            <option value="CANCELADA">Canceladas</option>
           </select>
         </div>
         <div class="card-body p-0">
@@ -194,9 +181,7 @@
                     <br>
                     <span class="text-muted small">{{ loc.veiculo.placa }}</span>
                   </td>
-                  <td>
-                    <span>{{ loc.usuario.nome }}</span>
-                  </td>
+                  <td>{{ loc.usuario.nome }}</td>
                   <td class="small">{{ formatarData(loc.dataEmprestimo) }}</td>
                   <td class="small">{{ formatarData(loc.dataDevolucaoPrevista) }}</td>
                   <td class="small">{{ formatarData(loc.dataDevolucaoReal!) }}</td>
@@ -224,8 +209,8 @@
                       <button *ngIf="loc.status === 'ATIVA'"
                         class="btn btn-sm btn-danger"
                         (click)="cancelar(loc.id!)">
-                           Cancelar
-                        </button>
+                        Cancelar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -241,5 +226,46 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL SIMULAÇÃO -->
+<div class="modal-backdrop fade show" *ngIf="modalSimulacaoVisivel"
+  style="z-index: 1040;"></div>
+
+<div class="modal d-block" *ngIf="modalSimulacaoVisivel" style="z-index: 1050;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Simular Devolução</h5>
+        <button class="btn-close btn-close-white"
+          (click)="fecharModalSimulacao()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          Veículo: <strong>{{ simulacaoLocacao?.veiculo?.marca }} {{ simulacaoLocacao?.veiculo?.modelo }}</strong><br>
+          Data prevista: <strong>{{ formatarData(simulacaoLocacao?.dataDevolucaoPrevista!) }}</strong>
+        </p>
+        <label class="form-label">Data de Devolução</label>
+        <input type="date" class="form-control"
+          [(ngModel)]="dataSimulacaoModal"
+          [ngModelOptions]="{standalone: true}"/>
+        <div class="text-muted small mt-2">
+          Data anterior à prevista → devolução antecipada sem multa.<br>
+          Data posterior → atraso com multa de 20%.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary"
+          (click)="fecharModalSimulacao()">
+          Cancelar
+        </button>
+        <button class="btn btn-dark"
+          [disabled]="!dataSimulacaoModal"
+          (click)="confirmarSimulacao()">
+          Calcular
+        </button>
+      </div>
+    </div>
   </div>
 </div>

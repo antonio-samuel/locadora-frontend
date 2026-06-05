@@ -1,0 +1,103 @@
+<app-navbar></app-navbar>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white fw-bold">
+          Meu Perfil
+        </div>
+        <div class="card-body p-4">
+
+          <!-- Dados bloqueados -->
+          <div class="mb-4 p-3 bg-light rounded">
+            <div class="small text-muted mb-2 fw-bold">Dados não editáveis</div>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="small text-muted">CPF</div>
+                <div class="fw-bold">{{ usuarioLogado?.cpf }}</div>
+              </div>
+              <div class="col-6">
+                <div class="small text-muted">CNH</div>
+                <div class="fw-bold">{{ usuarioLogado?.cnh }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alerta de sucesso -->
+          <div class="alert alert-success d-flex align-items-center gap-2"
+            *ngIf="mensagemSucesso">
+            ✅ {{ mensagemSucesso }}
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+
+            <!-- Nome -->
+            <div class="mb-3">
+              <label class="form-label">Nome Completo</label>
+              <input type="text" class="form-control" formControlName="nome"
+                [class.is-invalid]="nome.invalid && nome.touched"
+                [class.is-valid]="nome.valid && nome.touched"
+                maxlength="80"/>
+              <div class="text-danger small mt-1" *ngIf="nome.invalid && nome.touched">
+                <span *ngIf="nome.errors?.['required']">O nome é obrigatório.</span>
+                <span *ngIf="nome.errors?.['minlength']">Mínimo 3 caracteres.</span>
+              </div>
+            </div>
+
+            <!-- Telefone -->
+            <div class="mb-3">
+              <label class="form-label">Telefone</label>
+              <input type="text" class="form-control" formControlName="telefone"
+                [class.is-invalid]="telefone.invalid && telefone.touched"
+                [class.is-valid]="telefone.valid && telefone.touched"
+                maxlength="11" inputmode="numeric"/>
+              <div class="text-danger small mt-1" *ngIf="telefone.invalid && telefone.touched">
+                <span *ngIf="telefone.errors?.['required']">O telefone é obrigatório.</span>
+                <span *ngIf="telefone.errors?.['duplicado']">{{ telefone.errors?.['duplicado'] }}</span>
+              </div>
+            </div>
+
+            <!-- E-mail -->
+            <div class="mb-3">
+              <label class="form-label">E-mail</label>
+              <input type="email" class="form-control" formControlName="email"
+                [class.is-invalid]="email.invalid && email.touched"
+                [class.is-valid]="email.valid && email.touched"
+                maxlength="50"/>
+              <div class="text-danger small mt-1" *ngIf="email.invalid && email.touched">
+                <span *ngIf="email.errors?.['required']">O e-mail é obrigatório.</span>
+                <span *ngIf="email.errors?.['email']">Formato inválido.</span>
+                <span *ngIf="email.errors?.['duplicado']">{{ email.errors?.['duplicado'] }}</span>
+              </div>
+            </div>
+
+            <!-- Senha -->
+            <div class="mb-4">
+              <label class="form-label">
+                Nova Senha
+                <span class="text-muted small">(deixe em branco para manter a atual)</span>
+              </label>
+              <input type="password" class="form-control" formControlName="senha"
+                [class.is-invalid]="senha.invalid && senha.touched"
+                [class.is-valid]="senha.valid && senha.touched && senha.value"
+                maxlength="20" placeholder="Digite apenas se quiser alterar"/>
+              <div class="text-danger small mt-1" *ngIf="senha.invalid && senha.touched">
+                <span *ngIf="senha.errors?.['minlength']">Mínimo 4 caracteres.</span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100" [disabled]="carregando">
+              <span *ngIf="carregando"
+                class="spinner-border spinner-border-sm me-2" role="status"></span>
+              {{ carregando ? 'Salvando...' : 'Salvar Alterações' }}
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,23 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
-import { DashboardComponent } from './dashboard.component';
+import { PerfilComponent } from './perfil.component';
 import { SharedModule } from '../shared/shared.module';
 
 const routes: Routes = [
-  { path: '', component: DashboardComponent }
+  { path: '', component: PerfilComponent }
 ];
 
 @NgModule({
-  declarations: [DashboardComponent],
+  declarations: [PerfilComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     RouterModule.forChild(routes),
     SharedModule
   ]
 })
-export class DashboardModule {}
+export class PerfilModule {}

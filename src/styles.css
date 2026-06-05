@@ -1,19 +1,189 @@
-body {
-  background-color: #f4f6f9;
+/* ── Variáveis de cor ── */
+:root {
+  --primary:     #1a73e8;
+  --primary-dark:#5a4bd1;
+  --accent:      #a29bfe;
+  --dark:        #2d2d5e;
+  --dark-light:  #1a1a4e;
+  --light-bg:    #f5f3ff;
+  --text-light:  #e8eaff;
 }
 
+body {
+  background-color: var(--light-bg);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Navbar ── */
+.navbar {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%) !important;
+  box-shadow: 0 2px 12px rgba(26, 115, 232, 0.3);
+}
+
+.navbar-brand {
+  color: var(--text-light) !important;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+}
+
+.navbar .btn-outline-light {
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.85);
+  transition: all 0.2s;
+}
+
+.navbar .btn-outline-light:hover,
+.navbar .btn-outline-light.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.navbar .btn-outline-danger {
+  border-color: #ff4d6d;
+  color: #ff4d6d;
+}
+
+.navbar .btn-outline-danger:hover {
+  background-color: #ff4d6d;
+  color: white;
+}
+
+/* ── Cards de métricas ── */
+.card-metrica-total {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.card-metrica-ativas {
+  background: linear-gradient(135deg, #00b894 0%, #00897b 100%);
+}
+
+.card-metrica-concluidas {
+  background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+}
+
+/* ── Cards gerais ── */
+.card {
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.15) !important;
+}
+
+.card-header.bg-dark {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%) !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+/* ── Botões ── */
+.btn-dark {
+  background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%);
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-dark:hover {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #0d47a1 100%);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #00b894 0%, #00897b 100%);
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+}
+
+/* ── Tabela ── */
+.table thead.table-light th {
+  background-color: #e8f0fe !important;
+  color: var(--primary-dark);
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary);
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f0f4ff !important;
+}
+
+/* ── Auth card ── */
 .card-auth {
   max-width: 450px;
   margin: 80px auto;
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(26, 115, 232, 0.15);
 }
 
 .nav-tabs .nav-link {
   color: #495057;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--primary);
 }
 
 .nav-tabs .nav-link.active {
   font-weight: bold;
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ── Hero do catálogo ── */
+.catalogo-hero {
+  background: linear-gradient(135deg, #2d2d5e 0%, #1a1a4e 50%, #1a73e8 100%);
+}
+/* ── Cards de veículo ── */
+.card-veiculo:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(26, 115, 232, 0.2) !important;
+}
+
+/* ── Badges ── */
+.badge.bg-primary {
+  background: var(--primary) !important;
+}
+
+/* ── Inputs focados ── */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.2);
+}
+
+/* ── Transição de páginas ── */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+router-outlet + * {
+  animation: fadeSlideIn 0.25s ease-out;
 }

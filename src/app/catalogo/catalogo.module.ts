@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 import { CatalogoComponent } from './catalogo.component';
+import { SharedModule } from '../shared/shared.module';
 
 const routes: Routes = [
   { path: '', component: CatalogoComponent }
@@ -15,7 +16,8 @@ const routes: Routes = [
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    SharedModule
   ]
 })
 export class CatalogoModule {}

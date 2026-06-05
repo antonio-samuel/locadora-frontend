@@ -1,21 +1,8 @@
 <!-- ══════════════════════ NAVBAR ══════════════════════ -->
-<nav class="navbar navbar-dark bg-dark px-4">
-  <a class="navbar-brand fw-bold text-white text-decoration-none" routerLink="/">
-    🚗 LocaDrive
-  </a>
-  <div class="d-flex gap-2">
-    <a routerLink="/catalogo" class="btn btn-outline-light btn-sm">Catálogo</a>
-    <ng-container *ngIf="authService.isLogado(); else loginBtn">
-      <a routerLink="/dashboard" class="btn btn-light btn-sm">Meu Painel</a>
-    </ng-container>
-    <ng-template #loginBtn>
-      <a routerLink="/auth/login" class="btn btn-primary btn-sm">Login</a>
-    </ng-template>
-  </div>
-</nav>
+<app-navbar></app-navbar>
 
 <!-- ══════════════════════ HERO ══════════════════════ -->
-<div class="bg-dark text-white py-5 text-center">
+<div class="catalogo-hero text-white py-5 text-center">
   <h1 class="fw-bold mb-2">Encontre o veículo ideal</h1>
   <p class="text-white-50 mb-4">Aluguel rápido, simples e sem burocracia</p>
 
@@ -100,7 +87,7 @@
   <!-- Cards -->
   <div class="row g-4" *ngIf="!carregando && veiculosFiltrados.length > 0">
     <div class="col-md-4 col-lg-3" *ngFor="let v of veiculosFiltrados">
-      <div class="card h-100 border-0 shadow-sm">
+      <div class="card h-100 border-0 shadow-sm card-veiculo">
 
         <!-- Foto -->
         <div style="height: 180px; overflow: hidden; border-radius: 8px 8px 0 0;">

@@ -19,6 +19,12 @@ const routes: Routes = [
       import('./catalogo/catalogo.module').then(m => m.CatalogoModule)
   },
   {
+  path: 'perfil',
+  loadChildren: () =>
+    import('./perfil/perfil.module').then(m => m.PerfilModule),
+  canActivate: [AuthGuard]
+},
+  {
     path: 'dashboard',
     loadChildren: () =>
       import('./dashboard/dashboard.module').then(m => m.DashboardModule),
