@@ -9,6 +9,7 @@ import { LocacaoDetalhe } from '../core/models/locacao.model';
 import { Veiculo } from '../core/models/veiculo.model';
 import { Usuario } from '../core/models/usuario.model';
 import { ActivatedRoute, Router } from '@angular/router';
+import { PagamentoService } from '../core/services/pagamento.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,6 +31,11 @@ export class DashboardComponent implements OnInit {
   simulacaoLocacao: LocacaoDetalhe | null = null;
   modalSimulacaoVisivel = false;
   dataSimulacaoModal = '';
+  // Pagamento
+modalPagamentoVisivel = false;
+pagamentoLocacaoId: number | null = null;
+pagamentoValor: number = 0;
+metodoPagamentoSelecionado = '';
 
   constructor(
     private fb: FormBuilder,
@@ -37,6 +43,7 @@ export class DashboardComponent implements OnInit {
     private locacaoService: LocacaoService,
     private veiculoService: VeiculoService,
     private router: Router,
+    private pagamentoService: PagamentoService,
     private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
@@ -161,19 +168,35 @@ export class DashboardComponent implements OnInit {
   confirmarSimulacao(): void {
   if (!this.dataSimulacaoModal || !this.simulacaoLocacao) return;
 
-  const dataPrevista  = new Date(this.simulacaoLocacao.dataDevolucaoPrevista);
+  const dataEmprestimo = new Date(
+    this.simulacaoLocacao.dataEmprestimo.substring(0, 10) + 'T12:00:00'
+  );
+  const dataPrevista = new Date(
+    this.simulacaoLocacao.dataDevolucaoPrevista.substring(0, 10) + 'T12:00:00'
+  );
   const dataReal = new Date(this.dataSimulacaoModal + 'T12:00:00');
-  const comAtraso     = dataReal > dataPrevista;
 
-  const valorBase   = Number(this.simulacaoLocacao.valorTotal);
   const valorDiaria = Number(this.simulacaoLocacao.veiculo.valorDiaria);
 
+  const diffAtraso  = dataReal.getTime() - dataPrevista.getTime();
+  const diasAtraso  = Math.floor(diffAtraso / (1000 * 60 * 60 * 24));
+  const comAtraso   = diasAtraso > 0;
+
+  const diffUsados  = dataReal.getTime() - dataEmprestimo.getTime();
+  const diasUsados  = Math.max(1, Math.floor(diffUsados / (1000 * 60 * 60 * 24)));
+  const antecipada  = dataReal < dataPrevista;
+
+  let valorBase: number;
   let multa = 0;
-  if (comAtraso) {
-    const diasAtraso = Math.ceil(
-      (dataReal.getTime() - dataPrevista.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    multa = diasAtraso * valorDiaria * 0.02;//2% ao dia
+
+  if (antecipada) {
+    // Recalcula pelo dias usados
+    valorBase = diasUsados * valorDiaria;
+  } else {
+    valorBase = Number(this.simulacaoLocacao.valorTotal);
+    if (comAtraso) {
+      multa = diasAtraso * valorDiaria * 0.02;
+    }
   }
 
   const total = valorBase + multa;
@@ -200,6 +223,35 @@ export class DashboardComponent implements OnInit {
     this.simulacaoLocacao = null;
   }
 
+  abrirModalPagamento(locacao: LocacaoDetalhe): void {
+  this.pagamentoLocacaoId = locacao.id!;
+  this.pagamentoValor = Number(locacao.valorTotal);
+  this.metodoPagamentoSelecionado = '';
+  this.modalPagamentoVisivel = true;
+}
+
+fecharModalPagamento(): void {
+  this.modalPagamentoVisivel = false;
+  this.pagamentoLocacaoId = null;
+  this.metodoPagamentoSelecionado = '';
+}
+
+async confirmarPagamento(): Promise<void> {
+  if (!this.metodoPagamentoSelecionado || !this.pagamentoLocacaoId) return;
+  try {
+    await firstValueFrom(
+      this.pagamentoService.processar(
+        this.pagamentoLocacaoId,
+        this.metodoPagamentoSelecionado
+      )
+    );
+    this.fecharModalPagamento();
+    await this.carregarDados();
+  } catch {
+    alert('❌ Erro ao processar pagamento. Tente novamente.');
+  }
+}
+
   // ── Utilitários ───────────────────────────────────────────────────────────
 
  formatarData(data: string): string {
@@ -212,25 +264,27 @@ export class DashboardComponent implements OnInit {
     return valor?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? '—';
   }
 
-  badgeStatus(status: string): string {
-    switch (status) {
-      case 'ATIVA':                return 'badge bg-primary';
-      case 'CONCLUIDA_NO_PRAZO':   return 'badge bg-success';
-      case 'CONCLUIDA_COM_ATRASO': return 'badge bg-danger';
-      case 'CANCELADA':            return 'badge bg-warning text-dark';
-      default:                     return 'badge bg-secondary';
-    }
+ badgeStatus(status: string): string {
+  switch (status) {
+    case 'ATIVA':                return 'badge bg-primary';
+    case 'AGUARDANDO_PAGAMENTO': return 'badge bg-warning text-dark';
+    case 'CONCLUIDA_NO_PRAZO':   return 'badge bg-success';
+    case 'CONCLUIDA_COM_ATRASO': return 'badge bg-danger';
+    case 'CANCELADA':            return 'badge bg-secondary';
+    default:                     return 'badge bg-secondary';
   }
+}
 
-  labelStatus(status: string): string {
-    switch (status) {
-      case 'ATIVA':                return 'Ativa';
-      case 'CONCLUIDA_NO_PRAZO':   return 'Concluída no Prazo';
-      case 'CONCLUIDA_COM_ATRASO': return 'Concluída com Atraso';
-      case 'CANCELADA':            return 'Cancelada';
-      default:                     return status;
-    }
+labelStatus(status: string): string {
+  switch (status) {
+    case 'ATIVA':                return 'Ativa';
+    case 'AGUARDANDO_PAGAMENTO': return 'Aguardando Pagamento';
+    case 'CONCLUIDA_NO_PRAZO':   return 'Concluída no Prazo';
+    case 'CONCLUIDA_COM_ATRASO': return 'Concluída com Atraso';
+    case 'CANCELADA':            return 'Cancelada';
+    default:                     return status;
   }
+}
 
   logout(): void {
     this.authService.logout();

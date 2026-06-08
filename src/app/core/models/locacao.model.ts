@@ -6,7 +6,7 @@ export interface Locacao {
   dataEmprestimo: string;
   dataDevolucaoPrevista: string;
   dataDevolucaoReal?: string;
-  status: 'ATIVA' | 'CONCLUIDA_NO_PRAZO' | 'CONCLUIDA_COM_ATRASO' | 'CANCELADA';
+ status: 'ATIVA' | 'AGUARDANDO_PAGAMENTO' | 'CONCLUIDA_NO_PRAZO' | 'CONCLUIDA_COM_ATRASO' | 'CANCELADA';
   valorTotal?: number;
   valorMulta?: number;
   usuario: { id: number };
@@ -18,7 +18,7 @@ export interface LocacaoDetalhe {
   dataEmprestimo: string;
   dataDevolucaoPrevista: string;
   dataDevolucaoReal?: string;
-  status: 'ATIVA' | 'CONCLUIDA_NO_PRAZO' | 'CONCLUIDA_COM_ATRASO';
+ status: 'ATIVA' | 'AGUARDANDO_PAGAMENTO' | 'CONCLUIDA_NO_PRAZO' | 'CONCLUIDA_COM_ATRASO' | 'CANCELADA';
   valorTotal: number;
   valorMulta?: number;
   usuario: Usuario;

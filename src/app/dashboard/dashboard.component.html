@@ -5,7 +5,7 @@
   <!-- CARDS DE MÉTRICAS -->
   <div class="row g-3 mb-4">
     <div class="col-md-4">
-      <div class="card border-0 shadow-sm text-white bg-primary">
+      <div class="card border-0 shadow-sm text-white card-metrica-total">
         <div class="card-body d-flex justify-content-between align-items-center">
           <div>
             <div class="small opacity-75">Total de Locações</div>
@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card border-0 shadow-sm text-white bg-success">
+      <div class="card border-0 shadow-sm text-white card-metrica-ativas">
         <div class="card-body d-flex justify-content-between align-items-center">
           <div>
             <div class="small opacity-75">Ativas</div>
@@ -27,7 +27,7 @@
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card border-0 shadow-sm text-white bg-secondary">
+      <div class="card border-0 shadow-sm text-white card-metrica-concluidas">
         <div class="card-body d-flex justify-content-between align-items-center">
           <div>
             <div class="small opacity-75">Concluídas</div>
@@ -54,7 +54,9 @@
               <div class="fw-bold fs-5">{{ formatarData(simulacao.data) }}</div>
             </div>
             <div class="col-md-3">
-              <div class="small text-muted">Valor Base</div>
+              <div class="small text-muted">
+                {{ simulacao.valor < (simulacaoLocacao?.valorTotal ?? 0) ? 'Valor Recalculado' : 'Valor Base' }}
+              </div>
               <div class="fw-bold fs-5">{{ formatarValor(simulacao.valor) }}</div>
             </div>
             <div class="col-md-3">
@@ -70,9 +72,14 @@
           </div>
           <div class="mt-3 text-center">
             <span *ngIf="simulacao.multa > 0" class="badge bg-danger fs-6">
-              ⚠️ Devolução com atraso — multa aplicada
+              ⚠️ Devolução com atraso — multa de 2% ao dia aplicada
             </span>
-            <span *ngIf="simulacao.multa === 0" class="badge bg-success fs-6">
+            <span *ngIf="simulacao.multa === 0 && simulacao.valor < (simulacaoLocacao?.valorTotal ?? 0)"
+              class="badge bg-info fs-6">
+              ℹ️ Devolução antecipada — valor recalculado pelos dias utilizados
+            </span>
+            <span *ngIf="simulacao.multa === 0 && simulacao.valor >= (simulacaoLocacao?.valorTotal ?? 0)"
+              class="badge bg-success fs-6">
               ✅ Devolução dentro do prazo — sem multa
             </span>
           </div>
@@ -151,6 +158,7 @@
             [(ngModel)]="filtroStatus" [ngModelOptions]="{standalone: true}">
             <option value="TODAS">Todas</option>
             <option value="ATIVA">Ativas</option>
+            <option value="AGUARDANDO_PAGAMENTO">Aguardando Pagamento</option>
             <option value="CONCLUIDA_NO_PRAZO">Concluídas no Prazo</option>
             <option value="CONCLUIDA_COM_ATRASO">Concluídas com Atraso</option>
             <option value="CANCELADA">Canceladas</option>
@@ -165,8 +173,8 @@
                   <th>Veículo</th>
                   <th>Cliente</th>
                   <th>Retirada</th>
-                  <th>Devolução Prevista</th>
-                  <th>Devolução Real</th>
+                  <th>Dev. Prevista</th>
+                  <th>Dev. Real</th>
                   <th>Valor Total</th>
                   <th>Multa</th>
                   <th>Status</th>
@@ -211,6 +219,11 @@
                         (click)="cancelar(loc.id!)">
                         Cancelar
                       </button>
+                      <button *ngIf="loc.status === 'AGUARDANDO_PAGAMENTO'"
+                        class="btn btn-sm btn-primary"
+                        (click)="abrirModalPagamento(loc)">
+                         💳 Pagar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -230,16 +243,13 @@
 </div>
 
 <!-- MODAL SIMULAÇÃO -->
-<div class="modal-backdrop fade show" *ngIf="modalSimulacaoVisivel"
-  style="z-index: 1040;"></div>
-
+<div class="modal-backdrop fade show" *ngIf="modalSimulacaoVisivel" style="z-index: 1040;"></div>
 <div class="modal d-block" *ngIf="modalSimulacaoVisivel" style="z-index: 1050;">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title">Simular Devolução</h5>
-        <button class="btn-close btn-close-white"
-          (click)="fecharModalSimulacao()"></button>
+        <button class="btn-close btn-close-white" (click)="fecharModalSimulacao()"></button>
       </div>
       <div class="modal-body">
         <p class="text-muted small mb-3">
@@ -252,18 +262,75 @@
           [ngModelOptions]="{standalone: true}"/>
         <div class="text-muted small mt-2">
           Data anterior à prevista → devolução antecipada sem multa.<br>
-          Data posterior → atraso com multa de 20%.
+          Data posterior → atraso com multa de 2% ao dia.
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline-secondary"
-          (click)="fecharModalSimulacao()">
-          Cancelar
-        </button>
-        <button class="btn btn-dark"
-          [disabled]="!dataSimulacaoModal"
-          (click)="confirmarSimulacao()">
+        <button class="btn btn-outline-secondary" (click)="fecharModalSimulacao()">Cancelar</button>
+        <button class="btn btn-dark" [disabled]="!dataSimulacaoModal" (click)="confirmarSimulacao()">
           Calcular
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGAMENTO -->
+<div class="modal-backdrop fade show" *ngIf="modalPagamentoVisivel" style="z-index: 1040;"></div>
+<div class="modal d-block" *ngIf="modalPagamentoVisivel" style="z-index: 1050;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">💳 Confirmar Pagamento</h5>
+        <button class="btn-close btn-close-white" (click)="fecharModalPagamento()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <div class="small text-muted">Valor a pagar</div>
+          <div class="fs-2 fw-bold text-primary">{{ formatarValor(pagamentoValor) }}</div>
+        </div>
+       <label class="form-label fw-bold">Forma de Pagamento</label>
+<div class="d-flex gap-2 flex-wrap">
+
+ <button class="btn flex-grow-1 d-flex flex-column align-items-center py-3"
+  [class]="metodoPagamentoSelecionado === 'PIX' ? 'btn-dark' : 'btn-outline-secondary'"
+  (click)="metodoPagamentoSelecionado = 'PIX'">
+  <span style="font-size: 1.8rem; color: #00BDAE;">◆</span>
+  <span class="small fw-bold">PIX</span>
+</button>
+
+<button class="btn flex-grow-1 d-flex flex-column align-items-center py-3"
+  [class]="metodoPagamentoSelecionado === 'CREDITO' ? 'btn-dark' : 'btn-outline-secondary'"
+  (click)="metodoPagamentoSelecionado = 'CREDITO'">
+  <span style="font-size: 1.8rem;">💳</span>
+  <span class="small fw-bold">Crédito</span>
+</button>
+
+<button class="btn flex-grow-1 d-flex flex-column align-items-center py-3"
+  [class]="metodoPagamentoSelecionado === 'DEBITO' ? 'btn-dark' : 'btn-outline-secondary'"
+  (click)="metodoPagamentoSelecionado = 'DEBITO'">
+  <span style="font-size: 1.8rem;">🏦</span>
+  <span class="small fw-bold">Débito</span>
+</button>
+
+<button class="btn flex-grow-1 d-flex flex-column align-items-center py-3"
+  [class]="metodoPagamentoSelecionado === 'DINHEIRO' ? 'btn-dark' : 'btn-outline-secondary'"
+  (click)="metodoPagamentoSelecionado = 'DINHEIRO'">
+  <span style="font-size: 1.8rem;">💵</span>
+  <span class="small fw-bold">Dinheiro</span>
+</button>
+
+</div>
+        <div class="text-muted small mt-3" *ngIf="!metodoPagamentoSelecionado">
+          Selecione uma forma de pagamento para continuar.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="fecharModalPagamento()">Cancelar</button>
+        <button class="btn btn-success"
+          [disabled]="!metodoPagamentoSelecionado"
+          (click)="confirmarPagamento()">
+          ✅ Confirmar Pagamento
         </button>
       </div>
     </div>
