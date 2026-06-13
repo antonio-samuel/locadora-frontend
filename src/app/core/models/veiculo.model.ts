@@ -7,4 +7,6 @@ export interface Veiculo {
   ano: number;
   valorDiaria: number;
   disponivel: boolean;
+  fotoUrl: string;
+    categoria?: string;
 }

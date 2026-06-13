@@ -91,9 +91,9 @@
 
         <!-- Foto -->
         <div style="height: 180px; overflow: hidden; border-radius: 8px 8px 0 0;">
-          <img [src]="getFoto(v.marca, v.modelo)" [alt]="v.marca + ' ' + v.modelo"
-            class="w-100 h-100" style="object-fit: cover;"
-            onerror="this.src='https://placehold.co/320x180?text=Sem+Foto'">
+          <img [src]="getFoto(v)" [alt]="v.marca + ' ' + v.modelo"
+     class="w-100 h-100" style="object-fit: cover;"
+     onerror="this.src='https://placehold.co/320x180?text=Sem+Foto'">
         </div>
 
         <!-- Badge disponibilidade -->

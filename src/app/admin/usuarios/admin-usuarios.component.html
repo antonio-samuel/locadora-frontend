@@ -1,0 +1,90 @@
+<div class="d-flex justify-content-between mb-3">
+  <h4>Gerenciamento de Usuários</h4>
+  <button class="btn btn-primary" (click)="abrirModal()">+ Novo Usuário</button>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>CPF</th>
+      <th>CNH</th>
+      <th>E-mail</th>
+      <th>Telefone</th>
+      <th>Perfil</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let u of usuarios">
+      <td>{{ u.id }}</td>
+      <td>{{ u.nome }}</td>
+      <td>{{ u.cpf | slice:0:3 }}.{{ u.cpf | slice:3:6 }}.{{ u.cpf | slice:6:9 }}-{{ u.cpf | slice:9:11 }}</td>
+      <td>{{ u.cnh }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.telefone }}</td>
+      <td><span class="badge" [class.bg-primary]="u.perfil==='ADMIN'" [class.bg-secondary]="u.perfil!=='ADMIN'">{{ u.perfil }}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline-secondary me-1" (click)="abrirModal(u)">Editar</button>
+        <button class="btn btn-sm btn-outline-danger" (click)="excluir(u)">Excluir</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" [class.show]="modalAberto" [style.display]="modalAberto ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form [formGroup]="form" (ngSubmit)="salvar()">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editando ? 'Editar Usuário' : 'Novo Usuário' }}</h5>
+          <button type="button" class="btn-close" (click)="fecharModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="erroDuplicidade" class="alert alert-danger">{{ erroDuplicidade }}</div>
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input class="form-control" formControlName="nome" required>
+          </div>
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label">CPF</label>
+              <input class="form-control" formControlName="cpf" maxlength="11">
+            </div>
+            <div class="col">
+              <label class="form-label">CNH</label>
+              <input class="form-control" formControlName="cnh" maxlength="11">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input class="form-control" formControlName="email" type="email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Telefone</label>
+            <input class="form-control" formControlName="telefone" maxlength="11">
+          </div>
+          <div class="mb-3" *ngIf="!editando">
+            <label class="form-label">Senha</label>
+            <input class="form-control" formControlName="senha" type="password" placeholder="Mínimo 4 caracteres">
+            <small class="text-muted" *ngIf="editando">Deixe em branco para manter a senha atual.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Perfil</label>
+            <select class="form-select" formControlName="perfil">
+              <option value="CLIENTE">Cliente</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="fecharModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="modalAberto" (click)="fecharModal()"></div>

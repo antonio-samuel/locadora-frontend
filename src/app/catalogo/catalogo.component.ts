@@ -43,7 +43,8 @@ export class CatalogoComponent implements OnInit {
 
   async carregarVeiculos(): Promise<void> {
     try {
-      this.veiculos = await firstValueFrom(this.veiculoService.listarDisponiveis());
+      // 👇 ALTERADO AQUI: Chamamos listarTodos() em vez de listarDisponiveis()
+      this.veiculos = await firstValueFrom(this.veiculoService.listarTodos());
       this.aplicarFiltros();
     } catch {
       alert('❌ Erro ao carregar veículos.');
@@ -100,10 +101,12 @@ export class CatalogoComponent implements OnInit {
 
     this.veiculosFiltrados = resultado;
   }
-
-  getFoto(marca: string, modelo: string): string {
-    return getFotoVeiculo(marca, modelo);
+getFoto(veiculo: Veiculo): string {
+  if (veiculo.fotoUrl && veiculo.fotoUrl.trim() !== '') {
+    return veiculo.fotoUrl;
   }
+  return getFotoVeiculo(veiculo.marca, veiculo.modelo);
+}
 
   formatarValor(valor: number): string {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

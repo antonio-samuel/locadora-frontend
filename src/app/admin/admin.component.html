@@ -1,0 +1,17 @@
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Painel Administrativo</h2>
+    <a routerLink="/catalogo" class="btn btn-outline-secondary btn-sm">
+      ← Voltar ao Catálogo
+    </a>
+  </div>
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'veiculos'" (click)="setTab('veiculos')" href="javascript:void(0)">Veículos</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'usuarios'" (click)="setTab('usuarios')" href="javascript:void(0)">Usuários</a>
+    </li>
+  </ul>
+  <router-outlet></router-outlet>
+</div>

@@ -1,0 +1,17 @@
+/* Cor de fundo sutil para notificações não lidas */
+.bg-unread {
+  background-color: #f0f7ff !important;
+}
+
+.bg-unread:hover {
+  background-color: #e1f0ff !important;
+}
+
+/* Evita que o texto quebre o layout se for longo */
+.text-wrap {
+  white-space: normal !important;
+}
+
+.style-header {
+  font-size: 0.85rem;
+}

@@ -11,7 +11,7 @@
        class="btn btn-outline-light btn-sm">
       Catálogo
     </a>
-
+    
     <ng-container *ngIf="authService.isLogado(); else botoesDeslogado">
 
       <a routerLink="/dashboard"
@@ -19,16 +19,60 @@
          class="btn btn-outline-light btn-sm">
         Minha Área
       </a>
-
+      
       <a routerLink="/perfil"
          routerLinkActive="active"
          class="btn btn-outline-light btn-sm">
         Perfil
       </a>
 
+      <a *ngIf="authService.getSessao()?.perfil === 'ADMIN'"
+         routerLink="/admin"
+         routerLinkActive="active"
+         class="btn btn-outline-warning btn-sm">
+         Painel Admin
+      </a>
+
       <span class="text-white small ms-2">
         Olá, <strong>{{ authService.getSessao()?.nome }}</strong>
       </span>
+      
+      <div class="dropdown me-3">
+        <a class="nav-link position-relative text-white" href="#" id="navbarDropdownNotif" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <span style="font-size: 1.2rem;">🔔</span>
+          <span *ngIf="contadorNaoLidas > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ contadorNaoLidas }}
+          </span>
+        </a>
+        
+        <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="navbarDropdownNotif" style="width: 320px; max-height: 400px; overflow-y: auto;">
+          <li class="p-2 border-bottom bg-light fw-bold text-secondary style-header">
+            Notificações
+          </li>
+          
+          <li *ngIf="notificacoes.length === 0" class="p-3 text-center text-muted small">
+            Nenhuma notificação encontrada.
+          </li>
+
+          <li *ngFor="let notif of notificacoes" 
+              (click)="marcarComoLida(notif)"
+              class="dropdown-item p-3 border-bottom text-wrap position-relative"
+              [class.bg-unread]="!notif.lida"
+              style="cursor: pointer; transition: background 0.2s;">
+            
+            <span *ngIf="!notif.lida" class="position-absolute top-50 start-0 translate-middle-y bg-primary rounded-circle ms-2" style="width: 8px; height: 8px;"></span>
+            
+            <div [class.ms-3]="!notif.lida">
+              <p class="mb-1 small text-dark" [class.fw-bold]="!notif.lida">
+                {{ notif.mensagem }}
+              </p>
+              <span class="text-muted" style="font-size: 0.75rem;">
+                {{ notif.dataEnvio | date:'dd/MM/yyyy HH:mm' }}
+              </span>
+            </div>
+          </li>
+        </ul>
+      </div>
 
       <button class="btn btn-outline-danger btn-sm" (click)="logout()">
         Sair

@@ -6,7 +6,6 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
 import { UsuarioService } from '../core/services/usuario.service';
 import { Usuario } from '../core/models/usuario.model';
-import { PagamentoService } from '../core/services/pagamento.service';
 
 @Component({
   selector: 'app-perfil',
@@ -23,7 +22,6 @@ export class PerfilComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private usuarioService: UsuarioService,
-    private pagamentoService: PagamentoService,
     private router: Router
   ) {
     this.form = this.fb.group({

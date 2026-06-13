@@ -3,6 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
+
+  
   {
    path: '',
   redirectTo: 'catalogo',
@@ -24,6 +26,10 @@ const routes: Routes = [
     import('./perfil/perfil.module').then(m => m.PerfilModule),
   canActivate: [AuthGuard]
 },
+ {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)
+  },
   {
     path: 'dashboard',
     loadChildren: () =>

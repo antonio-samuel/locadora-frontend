@@ -1,10 +1,10 @@
 export interface Usuario {
-  id?: number;
+  id: number;
   nome: string;
   cpf: string;
   cnh: string;
-  telefone: string;
   email: string;
-  senha?: string;
-  perfil?: 'CLIENTE' | 'ADMIN';
+  telefone: string;
+  senha?: string; // opcional, não trafegar sempre
+  perfil: 'CLIENTE' | 'ADMIN';
 }
