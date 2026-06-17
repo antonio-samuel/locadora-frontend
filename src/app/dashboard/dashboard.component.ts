@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-
+import { Component, OnInit, OnDestroy } from '@angular/core'; // adicione OnDestroy
+import { Subscription } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
 import { LocacaoService } from '../core/services/locacao.service';
 import { VeiculoService } from '../core/services/veiculo.services';
@@ -10,13 +11,14 @@ import { Veiculo } from '../core/models/veiculo.model';
 import { Usuario } from '../core/models/usuario.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PagamentoService } from '../core/services/pagamento.service';
+import { StripeService } from '../core/services/stripe.service';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html'
 })
-export class DashboardComponent implements OnInit {
-
+export class DashboardComponent implements OnInit, OnDestroy{
+ private queryParamsSub?: Subscription; 
   usuarioLogado: Usuario | null = null;
   locacoes: LocacaoDetalhe[] = [];
   veiculos: Veiculo[] = [];
@@ -44,7 +46,8 @@ metodoPagamentoSelecionado = '';
     private veiculoService: VeiculoService,
     private router: Router,
     private pagamentoService: PagamentoService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private stripeService: StripeService
   ) {
     this.form = this.fb.group({
       veiculoId:             ['', Validators.required],
@@ -53,18 +56,42 @@ metodoPagamentoSelecionado = '';
     });
   }
 
-  ngOnInit(): void {
+   ngOnInit(): void {
     this.usuarioLogado = this.authService.getSessao();
     if (!this.usuarioLogado) {
       this.router.navigate(['/auth/login']);
       return;
     }
-    this.carregarDados().then(() => {
-      const veiculoId = this.route.snapshot.queryParamMap.get('veiculoId');
-      if (veiculoId) {
-        this.form.patchValue({ veiculoId });
-      }
+
+    this.carregarDados();
+
+    // ⬇️ Escuta mudanças nos query params (inclui retorno do Stripe)
+   this.queryParamsSub = this.route.queryParams.subscribe(async (params) => {
+  const pagamento = params['pagamento'];
+  const locacaoIdStr = params['locacaoId'];
+  const veiculoId = params['veiculoId'];
+
+  // Retorno do Stripe: pagamento=sucesso&locacaoId=30
+  if (pagamento === 'sucesso' && locacaoIdStr) {
+    const idLocacao = Number(locacaoIdStr);
+    if (!isNaN(idLocacao)) {
+      await this.concluirAposStripe(idLocacao);
+      // Remove os query params para não reprocessar
+      this.router.navigate([], { 
+        queryParams: { pagamento: null, locacaoId: null }, 
+        queryParamsHandling: 'merge' 
+      });
+    }
+  }
+
+  if (veiculoId) {
+    this.form.patchValue({ veiculoId });
+  }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();   // limpeza
   }
 
   async carregarDados(): Promise<void> {
@@ -251,6 +278,28 @@ async confirmarPagamento(): Promise<void> {
     alert('❌ Erro ao processar pagamento. Tente novamente.');
   }
 }
+
+async concluirAposStripe(locacaoId: number): Promise<void> {
+  try {
+    await firstValueFrom(this.pagamentoService.processar(locacaoId, 'STRIPE'));
+    await this.carregarDados();
+    alert('✅ Pagamento confirmado com sucesso!');
+  } catch {
+    // Locação pode já ter sido processada pelo webhook
+  }
+}
+async pagarComStripe(locacaoId: number): Promise<void> {
+  try {
+    const resultado = await firstValueFrom(
+      this.stripeService.criarSessao(locacaoId)
+    );
+    // Redireciona para a página de pagamento do Stripe
+    window.location.href = resultado.url;
+  } catch {
+    alert('❌ Erro ao iniciar pagamento com Stripe. Tente novamente.');
+  }
+}
+
 
   // ── Utilitários ───────────────────────────────────────────────────────────
 
