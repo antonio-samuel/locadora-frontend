@@ -1,27 +1,54 @@
-# Locadrive
+# 🚘 LocaDrive — Frontend (Angular)
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.21.
+O **LocaDrive Frontend** é uma aplicação Web (SPA) moderna construída em Angular 18, projetada para oferecer uma experiência ágil e intuitiva tanto para clientes de aluguel de carros quanto para administradores do sistema.
 
-## Development server
+---
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## 🛠️️ Tecnologias Utilizadas
 
-## Code scaffolding
+- **Framework:** Angular 18 (Arquitetura por NgModules)
+- **Linguagem:** TypeScript 5.5
+- **Estilização & Componentes:** Bootstrap 5.3.3 & CSS3
+- **Comunicação com API:** Angular `HttpClient` (RxJS com `firstValueFrom` e `async/await`)
+- **Rotas e Segurança:** Angular Router & AuthGuards
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+---
 
-## Build
+## 📂 Estrutura de Módulos
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+- `core/`: Serviços globais (`HttpClient`), Guards de rota, Validators e Models.
+- `shared/`: Componentes reutilizáveis (Navbar compartilhada).
+- `auth/`: Módulo de Login e Cadastro com abas dinâmicas e validação em tempo real.
+- `catalogo/`: Vitrine pública de veículos com busca e filtros (Sedan, SUV, Hatch, Pickup).
+- `dashboard/`: Área do cliente para gestão de reservas, simulação de devolução e pagamento.
+- `admin/`: Painel restrito para administradores com CRUD de veículos e usuários.
 
-## Running unit tests
+---
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## 📋 Pré-requisitos
 
-## Running end-to-end tests
+Antes de iniciar, certifique-se de ter instalado:
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+- [Node.js](https://nodejs.org/) (Versão 18 ou superior)
+- [npm](https://www.npmjs.com/) (Gerenciador de pacotes incluso no Node)
+- [Angular CLI](https://angular.dev/tools/cli) (`npm install -g @angular/cli`)
 
-## Further help
+---
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 🚀 Como Executar o Projeto
+
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/antonio-samuel/locadora-frontend.git](https://github.com/antonio-samuel/locadora-frontend.git)
+   cd locadora-frontend/locadrive
+
+   Instale as dependências do projeto:
+
+  Bash
+  npm install
+Inicie o servidor de desenvolvimento:
+
+  Bash
+  ng serve
+  Acesse a aplicação:
+Abra o seu navegador e acesse http://localhost:4200/
